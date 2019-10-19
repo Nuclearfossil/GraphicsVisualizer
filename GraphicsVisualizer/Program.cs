@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GraphicsVisualizer;
+using System;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
@@ -16,13 +17,14 @@ namespace ImGuiNET
         private static CommandList _cl;
         private static ImGuiController _controller;
         private static MemoryEditor _memoryEditor;
+        private static TransformExample _transformExample;
 
         // UI state
         private static float _f = 0.0f;
         private static int _counter = 0;
         private static int _dragInt = 0;
         private static Vector3 _clearColor = new Vector3(0.45f, 0.55f, 0.6f);
-        private static bool _showDemoWindow = true;
+        private static bool _showDemoWindow = false;
         private static bool _showAnotherWindow = false;
         private static bool _showMemoryEditor = false;
         private static byte[] _memoryEditorData;
@@ -49,6 +51,7 @@ namespace ImGuiNET
             _memoryEditor = new MemoryEditor();
             Random random = new Random();
             _memoryEditorData = Enumerable.Range(0, 1024).Select(i => (byte)random.Next(255)).ToArray();
+            _transformExample = new TransformExample();
 
             // Main application loop
             while (_window.Exists)
@@ -56,8 +59,12 @@ namespace ImGuiNET
                 InputSnapshot snapshot = _window.PumpEvents();
                 if (!_window.Exists) { break; }
                 _controller.Update(1f / 60f, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
+                _transformExample.Update();
 
-                SubmitUI();
+                SubmitBaseUI();
+                SubmitOtherUI();
+
+                _transformExample.Draw(_cl);
 
                 _cl.Begin();
                 _cl.SetFramebuffer(_gd.MainSwapchain.Framebuffer);
@@ -75,11 +82,8 @@ namespace ImGuiNET
             _gd.Dispose();
         }
 
-        private static unsafe void SubmitUI()
+        private static unsafe void SubmitBaseUI()
         {
-            // Demo code adapted from the official Dear ImGui demo program:
-            // https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx11/main.cpp#L172
-
             // 1. Show a simple window.
             // Tip: if we don't call ImGui.BeginWindow()/ImGui.EndWindow() the widgets automatically appears in a window called "Debug".
             {
@@ -101,25 +105,6 @@ namespace ImGuiNET
 
                 float framerate = ImGui.GetIO().Framerate;
                 ImGui.Text($"Application average {1000.0f / framerate:0.##} ms/frame ({framerate:0.#} FPS)");
-            }
-
-            // 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-            if (_showAnotherWindow)
-            {
-                ImGui.Begin("Another Window", ref _showAnotherWindow);
-                ImGui.Text("Hello from another window!");
-                if (ImGui.Button("Close Me"))
-                    _showAnotherWindow = false;
-                ImGui.End();
-            }
-
-            // 3. Show the ImGui demo window. Most of the sample code is in ImGui.ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-            if (_showDemoWindow)
-            {
-                // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway.
-                // Here we just want to make the demo initial state a bit more friendly!
-                ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
-                ImGui.ShowDemoWindow(ref _showDemoWindow);
             }
 
             if (ImGui.TreeNode("Tabs"))
@@ -193,6 +178,32 @@ namespace ImGuiNET
 
             ImGuiIOPtr io = ImGui.GetIO();
             SetThing(out io.DeltaTime, 2f);
+        }
+
+        private static unsafe void SubmitOtherUI()
+        {
+            // Demo code adapted from the official Dear ImGui demo program:
+            // https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx11/main.cpp#L172
+
+            // 1. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
+            if (_showAnotherWindow)
+            {
+                ImGui.Begin("Another Window", ref _showAnotherWindow);
+                ImGui.Text("Hello from another window!");
+                if (ImGui.Button("Close Me"))
+                    _showAnotherWindow = false;
+                ImGui.End();
+            }
+
+            // 2. Show the ImGui demo window. Most of the sample code is in ImGui.ShowDemoWindow(). Read its code to learn more about Dear ImGui!
+            if (_showDemoWindow)
+            {
+                // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway.
+                // Here we just want to make the demo initial state a bit more friendly!
+                ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
+                ImGui.ShowDemoWindow(ref _showDemoWindow);
+            }
+
 
             if (_showMemoryEditor)
             {
