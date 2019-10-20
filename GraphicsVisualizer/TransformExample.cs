@@ -160,23 +160,27 @@ namespace GraphicsVisualizer
                 #region Using a Matrix
                 else
                 {
-                    // Scale
-                    _quadVertices[index].Position.X = _originalQuadVertices[index].Position.X * uiData.UniformScale;
-                    _quadVertices[index].Position.Y = _originalQuadVertices[index].Position.Y * uiData.UniformScale;
+                    // Scale Matrix
+                    SlowMatrix33 scale = new SlowMatrix33();
+                    SlowMatrix33.SetScale(scale, uiData.UniformScale, uiData.UniformScale);
 
-                    float pointX = _quadVertices[index].Position.X;
-                    float pointY = _quadVertices[index].Position.Y;
+                    // Rotation Matrix
+                    SlowMatrix33 rotationMatrix = new SlowMatrix33();
+                    SlowMatrix33.SetRotation(rotationMatrix, asRadians);
 
-                    // Using a Matrix:
-                    SlowMatrix22 rotationMatrix = new SlowMatrix22();
-                    rotationMatrix.SetRotation(asRadians);
-                    var point = new float[2] { pointX, pointY };
+                    // Translation Matrix
+                    SlowMatrix33 translationMatrix = new SlowMatrix33();
+                    SlowMatrix33.SetTransform(translationMatrix, uiData._translate.X, uiData._translate.Y);
 
-                    var rotatedPoint = rotationMatrix.MultVec2(ref point);
+                    // Multiply these matrices together
+                    SlowMatrix33 srt = scale * rotationMatrix * translationMatrix;
 
-                    // Translation
-                    _quadVertices[index].Position.X = rotatedPoint[0] + uiData._translate.X;
-                    _quadVertices[index].Position.Y = rotatedPoint[1] + uiData._translate.Y;
+                    // and now multiply the point by this matrix
+                    float[] vertex = new float[3] { _originalQuadVertices[index].Position.X, _originalQuadVertices[index].Position.Y, 1.0f };
+                    float[] transformedVert = srt.MultVec3(vertex);
+
+                    _quadVertices[index].Position.X = transformedVert[0];
+                    _quadVertices[index].Position.Y = transformedVert[1];
                 }
                 #endregion
 

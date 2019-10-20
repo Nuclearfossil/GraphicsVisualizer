@@ -85,17 +85,22 @@ namespace GraphicsVisualizer
         public void SetIdentity()
         {
             // Set the diagonal
-            // depending on memory layout, this may need to be initialized
-            // by row, not by column
+            Array.Clear(_matrix, 0, _matrix.Length);
             _matrix[0, 0] = 1.0f;
-            _matrix[0, 1] = 0.0f;
-            _matrix[0, 2] = 0.0f;
-            _matrix[1, 0] = 0.0f;
             _matrix[1, 1] = 1.0f;
-            _matrix[1, 2] = 0.0f;
-            _matrix[2, 0] = 0.0f;
-            _matrix[2, 1] = 0.0f;
             _matrix[2, 2] = 1.0f;
+        }
+
+        public float[] MultVec3(float[] data)
+        {
+            float[] result = new float[3] { 0, 0, 1 };
+
+            for (int index = 0; index < 2; index++)
+            {
+                result[index] = data[0] * _matrix[index, 0] + data[1] * _matrix[index, 1] + data[2] * _matrix[index, 2];
+            }
+
+            return result;
         }
 
         public ref float this[int row, int column] => ref _matrix[row, column];
@@ -110,6 +115,8 @@ namespace GraphicsVisualizer
 
             SlowMatrix33 c = new SlowMatrix33();
 
+            // AWM: To Check
+            //      It's possible I have the multiplication backwards.
             for (int i = 0; i < c.N; i++)
             {
                 for (int j = 0; j < c.M; j++)
@@ -141,6 +148,39 @@ namespace GraphicsVisualizer
                 }
             }
             return c;
+        }
+
+        public static void SetTransform(SlowMatrix33 matrix, float tx, float ty)
+        {
+            matrix.SetIdentity();
+            matrix[0, 2] = tx;
+            matrix[1, 2] = ty;
+        }
+
+        public static void SetRotation(SlowMatrix33 matrix, float rotation)
+        {
+            float cosValue = MathF.Cos(rotation);
+            float sinValue = MathF.Sin(rotation);
+
+            matrix.SetIdentity();
+            matrix[0, 0] = cosValue;
+            matrix[0, 1] = -sinValue;
+            matrix[1, 0] = sinValue;
+            matrix[1, 1] = cosValue;
+        }
+
+        public static void SetScale(SlowMatrix33 matrix, float sx, float sy)
+        {
+            matrix.SetIdentity();
+            matrix[0, 0] = sx;
+            matrix[1, 1] = sy;
+        }
+
+        public static void SetShear(SlowMatrix33 matrix, float cx, float cy)
+        {
+            matrix.SetIdentity();
+            matrix[0, 1] = cx;
+            matrix[1, 0] = cy;
         }
     }
 }
