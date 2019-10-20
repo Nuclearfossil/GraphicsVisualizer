@@ -40,7 +40,7 @@ namespace ImGuiNET
         {
             // Create window, GraphicsDevice, and all resources necessary for the demo.
             VeldridStartup.CreateWindowAndGraphicsDevice(
-                new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, "ImGui.NET Sample Program"),
+                new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, "GraphicsVisualizer"),
                 new GraphicsDeviceOptions(true, null, true),
                 out _window,
                 out _gd);
@@ -100,7 +100,7 @@ namespace ImGuiNET
 
                 // ImGui.ColorEdit3("clear color", ref _clearColor);                   // Edit 3 floats representing a color
 
-                ImGui.Text($"Mouse position: {ImGui.GetMousePos()}");
+                // ImGui.Text($"Mouse position: {ImGui.GetMousePos()}");
 
                 // ImGui.Checkbox("Demo Window", ref _showDemoWindow);                 // Edit bools storing our windows open/close state
                 // ImGui.Checkbox("Another Window", ref _showAnotherWindow);
