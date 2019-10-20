@@ -57,4 +57,90 @@ namespace GraphicsVisualizer
             _matrix[1, 1] = cosAngle;
         }
     }
+
+    public class SlowMatrix33
+    {
+        internal float[,] _matrix;
+
+        public int N => _matrix.GetUpperBound(0) + 1;
+        public int M => _matrix.GetUpperBound(1) + 1;
+
+        public SlowMatrix33()
+        {
+            _matrix = new float[3, 3];
+            SetIdentity();
+        }
+
+        public SlowMatrix33(float[,] matrix33)
+        {
+            if (matrix33.Length != 9)
+            {
+                throw new ArgumentException("You are trying to copy a matrix that isn't a 3x3 matrix!");
+
+            }
+
+            _matrix = matrix33;
+        }
+
+        public void SetIdentity()
+        {
+            // Set the diagonal
+            // depending on memory layout, this may need to be initialized
+            // by row, not by column
+            _matrix[0, 0] = 1.0f;
+            _matrix[0, 1] = 0.0f;
+            _matrix[0, 2] = 0.0f;
+            _matrix[1, 0] = 0.0f;
+            _matrix[1, 1] = 1.0f;
+            _matrix[1, 2] = 0.0f;
+            _matrix[2, 0] = 0.0f;
+            _matrix[2, 1] = 0.0f;
+            _matrix[2, 2] = 1.0f;
+        }
+
+        public ref float this[int row, int column] => ref _matrix[row, column];
+
+        public static SlowMatrix33 operator *(SlowMatrix33 a, SlowMatrix33 b)
+        {
+            // make sure we're a square matrix and a 3x3 matrix
+            if ((a.M != a.N && a.M != 3) || (b.M != b.N && b.M != 3))
+            {
+                throw new ArgumentException("The matrices are not Square, or they are not a 3x3 matrix.");
+            }
+
+            SlowMatrix33 c = new SlowMatrix33();
+
+            for (int i = 0; i < c.N; i++)
+            {
+                for (int j = 0; j < c.M; j++)
+                {
+                    float s = 0.0f;
+                    for (int m = 0; m < a.M; m++)
+                    {
+                        s += a[i, m] * b[m, j];
+                    }
+                    c[i, j] = s;
+                }
+            }
+            return c;
+        }
+
+        public static SlowMatrix33 operator +(SlowMatrix33 a, SlowMatrix33 b)
+        {
+            if ((a.M != a.N && a.M != 3) || (b.M != b.N && b.M != 3))
+            {
+                throw new ArgumentException("The matrices are not Square, or they are not a 3x3 matrix.");
+            }
+
+            SlowMatrix33 c = new SlowMatrix33();
+            for (int i = 0; i < c.N; i++)
+            {
+                for (int j = 0; j < c.M; j++)
+                {
+                    c[i, j] = a[i, j] + b[i, j];
+                }
+            }
+            return c;
+        }
+    }
 }
