@@ -22,17 +22,12 @@ namespace ImGuiNET
         private static MemoryEditor _memoryEditor;
         private static TransformExample _transformExample;
         private static TransformUIData _transformUIData;
+        private static SoftwareProjectionExample _softwareProjectionExample;
+        private static ProjectionUIData _projectionUIData;
 
         // UI state
-        // private static int _counter = 0;
-        // private static int _dragInt = 0;
         private static Vector3 _clearColor = new Vector3(0.45f, 0.55f, 0.6f);
-        private static bool _showDemoWindow = false;
         private static bool _showAnotherWindow = false;
-        private static bool _showMemoryEditor = false;
-        private static byte[] _memoryEditorData;
-        // private static uint s_tab_bar_flags = (uint)ImGuiTabBarFlags.Reorderable;
-        static bool[] s_opened = { true, true, true, true }; // Persistent user state
 
         static void SetThing(out float i, float val) { i = val; }
 
@@ -53,9 +48,10 @@ namespace ImGuiNET
             _controller = new ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
             _memoryEditor = new MemoryEditor();
             Random random = new Random();
-            _memoryEditorData = Enumerable.Range(0, 1024).Select(i => (byte)random.Next(255)).ToArray();
             _transformExample = new TransformExample(_gd);
             _transformUIData = new TransformUIData();
+            _softwareProjectionExample = new SoftwareProjectionExample(_gd);
+            _projectionUIData = new ProjectionUIData();
 
             // Main application loop
             while (_window.Exists)
@@ -63,7 +59,8 @@ namespace ImGuiNET
                 InputSnapshot snapshot = _window.PumpEvents();
                 if (!_window.Exists) { break; }
                 _controller.Update(1f / 60f, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
-                _transformExample.Update(_transformUIData);
+                //_transformExample.Update(_transformUIData);
+                _softwareProjectionExample.Update(_projectionUIData);
 
                 SubmitBaseUI();
                 SubmitOtherUI();
@@ -71,7 +68,8 @@ namespace ImGuiNET
                 _cl.Begin();
                 _cl.SetFramebuffer(_gd.MainSwapchain.Framebuffer);
                 _cl.ClearColorTarget(0, new RgbaFloat(_clearColor.X, _clearColor.Y, _clearColor.Z, 1f));
-                _transformExample.Draw(_cl);
+                // _transformExample.Draw(_cl);
+                _softwareProjectionExample.Draw(_cl);
                 _controller.Render(_gd, _cl);
                 _cl.End();
                 _gd.SubmitCommands(_cl);
@@ -93,97 +91,23 @@ namespace ImGuiNET
             // Tip: if we don't call ImGui.BeginWindow()/ImGui.EndWindow() the widgets automatically appears in a window called "Debug".
             ImGui.Begin("Transform Example");
             {
-                ImGui.Checkbox("Calculate By Hand?", ref _transformUIData._byHand);
-                ImGui.SliderFloat("Uniform Scale", ref _transformUIData._uniformScale, 0.001f, 1.0f, _transformUIData.UniformScale.ToString("0.00000"), 1);  // Edit 1 float using a slider from 0.0f to 1.0f
-                ImGui.SliderFloat2("Translation (X, Y)", ref _transformUIData._translate, -1.0f, 1.0f);
-                ImGui.SliderFloat("Rotation", ref _transformUIData._rotateZ, -360.0f, 360.0f, _transformUIData.RotateZ.ToString("0.0000"), 1);
-
-                // ImGui.ColorEdit3("clear color", ref _clearColor);                   // Edit 3 floats representing a color
-
-                // ImGui.Text($"Mouse position: {ImGui.GetMousePos()}");
-
-                // ImGui.Checkbox("Demo Window", ref _showDemoWindow);                 // Edit bools storing our windows open/close state
-                // ImGui.Checkbox("Another Window", ref _showAnotherWindow);
-                // ImGui.Checkbox("Memory Editor", ref _showMemoryEditor);
-                // if (ImGui.Button("Button"))                                         // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-                //     _counter++;
-                // ImGui.SameLine(0, -1);
-                // ImGui.Text($"counter = {_counter}");
-                //
-                // ImGui.DragInt("Draggable Int", ref _dragInt);
-                //
-                // float framerate = ImGui.GetIO().Framerate;
-                // ImGui.Text($"Application average {1000.0f / framerate:0.##} ms/frame ({framerate:0.#} FPS)");
+                ImGui.Checkbox("Asymmetrical viewport?", ref _projectionUIData._asymetricalProjection);
+                ImGui.SameLine();
+                ImGui.Checkbox("Use Matrices", ref _projectionUIData._useMatrices);
+                if (_projectionUIData._asymetricalProjection)
+                {
+                    ImGui.SliderFloat("Left", ref _projectionUIData._left, -10, 10);
+                    ImGui.SliderFloat("Right", ref _projectionUIData._right, -10, 10);
+                    ImGui.SliderFloat("Top", ref _projectionUIData._top, -10, 10);
+                    ImGui.SliderFloat("Bottom", ref _projectionUIData._bottom, -10, 10);
+                }
+                else
+                {
+                    ImGui.SliderFloat("FOV Y", ref _projectionUIData._fovy, 1, 90);
+                    ImGui.SliderFloat("Aspect Ratio", ref _projectionUIData._aspect, 0.1f, 2.0f);
+                }
             }
 
-            //if (ImGui.TreeNode("Tabs"))
-            //{
-            //    if (ImGui.TreeNode("Basic"))
-            //    {
-            //        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags.None;
-            //        if (ImGui.BeginTabBar("MyTabBar", tab_bar_flags))
-            //        {
-            //            if (ImGui.BeginTabItem("Avocado"))
-            //            {
-            //                ImGui.Text("This is the Avocado tab!\nblah blah blah blah blah");
-            //                ImGui.EndTabItem();
-            //            }
-            //            if (ImGui.BeginTabItem("Broccoli"))
-            //            {
-            //                ImGui.Text("This is the Broccoli tab!\nblah blah blah blah blah");
-            //                ImGui.EndTabItem();
-            //            }
-            //            if (ImGui.BeginTabItem("Cucumber"))
-            //            {
-            //                ImGui.Text("This is the Cucumber tab!\nblah blah blah blah blah");
-            //                ImGui.EndTabItem();
-            //            }
-            //            ImGui.EndTabBar();
-            //        }
-            //        ImGui.Separator();
-            //        ImGui.TreePop();
-            //    }
-            //
-            //    if (ImGui.TreeNode("Advanced & Close Button"))
-            //    {
-            //        // Expose a couple of the available flags. In most cases you may just call BeginTabBar() with no flags (0).
-            //        ImGui.CheckboxFlags("ImGuiTabBarFlags_Reorderable", ref s_tab_bar_flags, (uint)ImGuiTabBarFlags.Reorderable);
-            //        ImGui.CheckboxFlags("ImGuiTabBarFlags_AutoSelectNewTabs", ref s_tab_bar_flags, (uint)ImGuiTabBarFlags.AutoSelectNewTabs);
-            //        ImGui.CheckboxFlags("ImGuiTabBarFlags_NoCloseWithMiddleMouseButton", ref s_tab_bar_flags, (uint)ImGuiTabBarFlags.NoCloseWithMiddleMouseButton);
-            //        if ((s_tab_bar_flags & (uint)ImGuiTabBarFlags.FittingPolicyMask) == 0)
-            //            s_tab_bar_flags |= (uint)ImGuiTabBarFlags.FittingPolicyDefault;
-            //        if (ImGui.CheckboxFlags("ImGuiTabBarFlags_FittingPolicyResizeDown", ref s_tab_bar_flags, (uint)ImGuiTabBarFlags.FittingPolicyResizeDown))
-            //            s_tab_bar_flags &= ~((uint)ImGuiTabBarFlags.FittingPolicyMask ^ (uint)ImGuiTabBarFlags.FittingPolicyResizeDown);
-            //        if (ImGui.CheckboxFlags("ImGuiTabBarFlags_FittingPolicyScroll", ref s_tab_bar_flags, (uint)ImGuiTabBarFlags.FittingPolicyScroll))
-            //            s_tab_bar_flags &= ~((uint)ImGuiTabBarFlags.FittingPolicyMask ^ (uint)ImGuiTabBarFlags.FittingPolicyScroll);
-            //
-            //        // Tab Bar
-            //        string[] names = { "Artichoke", "Beetroot", "Celery", "Daikon" };
-            //
-            //        for (int n = 0; n < s_opened.Length; n++)
-            //        {
-            //            if (n > 0) { ImGui.SameLine(); }
-            //            ImGui.Checkbox(names[n], ref s_opened[n]);
-            //        }
-            //
-            //        // Passing a bool* to BeginTabItem() is similar to passing one to Begin(): the underlying bool will be set to false when the tab is closed.
-            //        if (ImGui.BeginTabBar("MyTabBar", (ImGuiTabBarFlags)s_tab_bar_flags))
-            //        {
-            //            for (int n = 0; n < s_opened.Length; n++)
-            //                if (s_opened[n] && ImGui.BeginTabItem(names[n], ref s_opened[n]))
-            //                {
-            //                    ImGui.Text($"This is the {names[n]} tab!");
-            //                    if ((n & 1) != 0)
-            //                        ImGui.Text("I am an odd tab.");
-            //                    ImGui.EndTabItem();
-            //                }
-            //            ImGui.EndTabBar();
-            //        }
-            //        ImGui.Separator();
-            //        ImGui.TreePop();
-            //    }
-            //    ImGui.TreePop();
-            //}
             ImGui.End();
             ImGuiIOPtr io = ImGui.GetIO();
             SetThing(out io.DeltaTime, 2f);
@@ -202,21 +126,6 @@ namespace ImGuiNET
                 if (ImGui.Button("Close Me"))
                     _showAnotherWindow = false;
                 ImGui.End();
-            }
-
-            // 2. Show the ImGui demo window. Most of the sample code is in ImGui.ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-            if (_showDemoWindow)
-            {
-                // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway.
-                // Here we just want to make the demo initial state a bit more friendly!
-                ImGui.SetNextWindowPos(new Vector2(650, 20), ImGuiCond.FirstUseEver);
-                ImGui.ShowDemoWindow(ref _showDemoWindow);
-            }
-
-
-            if (_showMemoryEditor)
-            {
-                _memoryEditor.Draw("Memory Editor", _memoryEditorData, _memoryEditorData.Length);
             }
         }
     }
