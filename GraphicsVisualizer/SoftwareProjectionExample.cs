@@ -208,6 +208,11 @@ namespace GraphicsVisualizer
                     float divZ = _data3d[index].Position.Z;
 
                     // project the 3D co-ordinates onto a plane parallel to the XY plane, along the Z axis nearZ units away
+
+                    // Of course, this doesn't do much.
+                    // _quadVertices[index].Position.X = projX;
+                    // _quadVertices[index].Position.Y = projY;
+
                     _quadVertices[index].Position.X = ((2.0f * projX * nearZ - nearZ * (_right + _left)) / (_right - _left)) / divZ;
                     _quadVertices[index].Position.Y = ((2.0f * projY * nearZ - nearZ * (_top + _bottom)) / (_top - _bottom)) / divZ;
                 }
