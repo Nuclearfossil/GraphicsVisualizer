@@ -174,7 +174,7 @@ namespace GraphicsVisualizer
         }
 
         // This really doesn't go here, move it later
-        public static void Frustum(SlowMatrix44 matrix, float angleOfView, float aspectRatio, float n, float f)
+        public static void FrustumA(SlowMatrix44 matrix, float angleOfView, float aspectRatio, float n, float f)
         {
             float b, t, l, r;
             t = n * MathF.Tan(angleOfView.ToRadians() * 0.5f);
@@ -186,6 +186,18 @@ namespace GraphicsVisualizer
             SetProjection(matrix, n, f, l, r, t, b);
         }
 
+        public static void FrustumFOVB(SlowMatrix44 matrix, float angleOfView, float aspectRatio, float n, float f)
+        {
+            float e = 1.0f / MathF.Tan(angleOfView.ToRadians() * 0.5f);
+            matrix.SetIdentity();
+            matrix[0, 0] = e / aspectRatio;
+            matrix[1, 1] = e;
+            matrix[2, 2] = -(f + n) / (f - n);
+            matrix[2, 3] = -(2.0f * n * f) / (f - n);
+            matrix[3, 2] = -1.0f;
+            matrix[3, 3] = 0.0f;
+        }
+
         public static void SetProjection(SlowMatrix44 matrix, float n, float f, float l, float r, float t, float b)
         {
             matrix.SetIdentity();
@@ -193,9 +205,10 @@ namespace GraphicsVisualizer
             matrix[0, 2] = (r + l) / (r - l);
             matrix[1, 1] = 2.0f * n / (t - b);
             matrix[1, 2] = (t + b) / (t - b);
-            matrix[2, 2] = (f + n) / (f - n);
-            matrix[2, 3] = (-2.0f * n * f) / (f - n);
+            matrix[2, 2] = -(f + n) / (f - n);
+            matrix[2, 3] = -(2.0f * n * f) / (f - n);
             matrix[3, 2] = -1.0f;
+            matrix[3, 3] = 0.0f;
         }
 
         public static void SetRotationY(SlowMatrix44 matrix, float ry)

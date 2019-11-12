@@ -164,10 +164,11 @@ namespace GraphicsVisualizer
             throw new NotImplementedException();
         }
 
-        public void Update(ProjectionUIData uiData)
+        public void Update(ProjectionUIData uiData, float aspectRatio)
         {
             int vertexCount = _data2d.Length;
             float nearZ = 1.0f;
+            float farZ = 4.0f;
 
             float _right, _left, _top, _bottom;
             if (uiData._asymetricalProjection)
@@ -188,7 +189,7 @@ namespace GraphicsVisualizer
 
             // or, use Matrices!
             SlowMatrix44 projectionMatrix = new SlowMatrix44();
-            SlowMatrix44.Frustum(projectionMatrix, uiData._fovy, uiData._aspect, nearZ, 10.0f);
+            SlowMatrix44.FrustumA(projectionMatrix, uiData._fovy, aspectRatio, nearZ, farZ);
 
             for (int index = 0; index < vertexCount; index++)
             {
@@ -198,19 +199,20 @@ namespace GraphicsVisualizer
                     float[] projectedPoint = new float[4];
 
                     projectedPoint = projectionMatrix.MultVec4(point);
-                    _quadVertices[index].Position.X = projectedPoint[0] / projectedPoint[2];
-                    _quadVertices[index].Position.Y = projectedPoint[1] / projectedPoint[2];
+                    _quadVertices[index].Position.X = projectedPoint[0] / projectedPoint[3];
+                    _quadVertices[index].Position.Y = projectedPoint[1] / projectedPoint[3];
                 }
                 else
                 {
-                    float projX = _data3d[index].Position.X;
-                    float projY = _data3d[index].Position.Y;
-                    float divZ = _data3d[index].Position.Z;
+                    SlowMatrix44 projDivideMatrix = new SlowMatrix44();
+                    SlowMatrix44.FrustumFOVB(projDivideMatrix, uiData._fovy, aspectRatio, nearZ, farZ);
 
-                    // project the 3D co-ordinates onto a plane parallel to the XY plane, along the Z axis nearZ units away
-                    // Of course, this doesn't do much.
-                    _quadVertices[index].Position.X = projX / divZ;
-                    _quadVertices[index].Position.Y = projY / divZ;
+                    float[] point = new float[] { _data3d[index].Position.X, _data3d[index].Position.Y, _data3d[index].Position.Z, 1.0f };
+                    float[] projectedPoint = new float[4];
+
+                    projectedPoint = projDivideMatrix.MultVec4(point);
+                    _quadVertices[index].Position.X = projectedPoint[0] / projectedPoint[3];
+                    _quadVertices[index].Position.Y = projectedPoint[1] / projectedPoint[3];
                 }
                 _quadVertices[index].Color = _data3d[index].Color;
             }

@@ -60,7 +60,7 @@ namespace ImGuiNET
                 if (!_window.Exists) { break; }
                 _controller.Update(1f / 60f, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
                 //_transformExample.Update(_transformUIData);
-                _softwareProjectionExample.Update(_projectionUIData);
+                _softwareProjectionExample.Update(_projectionUIData, (float)_window.Width / (float)_window.Height);
 
                 SubmitBaseUI();
                 SubmitOtherUI();
